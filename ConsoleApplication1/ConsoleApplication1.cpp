@@ -13,7 +13,7 @@ struct rotacionar_cubo {
 
 GLfloat angulo, fAspect, tamanho_cubo;
 GLint girar_y, girar_x, crement, x_0, x_k, y_0, y_k, z_0, z_k , espacamento;
-vector<rotacionar_cubo> rotacoes_cubo[3][3][3];
+vector<rotacionar_cubo> peca_cubo[3][3][3];
 
 const char direcoes[2] = { 'q', 'e'};
 char str_aleatorio;
@@ -27,45 +27,43 @@ void aplicar_rotacao(GLfloat angulo) {
     int index;
     rotacionar_cubo rotacao;
 
-    // copy face to be rotated
-    // apply rotacao to face
+    // copia as modificacoes das faces
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j) {
             index = 2 - j % 3;
 
             if (x_0 == x_k) {
                 rotacao = { angulo, 1.0, 0.0, 0.0 };
-                face[index][i] = rotacoes_cubo[x_k][i][j];
+                face[index][i] = peca_cubo[x_k][i][j];
             }
 
             if (y_0 == y_k) {
                 rotacao = { angulo, 0.0, 1.0, 0.0 };
-                face[index][i] = rotacoes_cubo[j][y_k][i];
+                face[index][i] = peca_cubo[j][y_k][i];
             }
 
             if (z_0 == z_k) {
-                rotacao = { -1 * angulo, 0.0, 0.0, 1.0 };
-                face[index][i] = rotacoes_cubo[j][i][z_k];
+                rotacao = {  angulo, 0.0, 0.0, 1.0 };
+                face[index][i] = peca_cubo[j][i][z_k];
             }
-
+            
+            // Adiciona a face copiada ao vetor - o qual funciona como uma memoria (append)
             face[index][i].push_back(rotacao);
 
         }
 
-    // copy back rotated face
+    // modifica o cubo com as faces copiada
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j) {
-
             if (x_0 == x_k)
-                rotacoes_cubo[x_k][i][j] = face[i][j];
+                peca_cubo[x_k][i][j] = face[i][j];
 
             if (y_0 == y_k)
-                rotacoes_cubo[j][y_k][i] = face[i][j];
+                peca_cubo[j][y_k][i] = face[i][j];
 
             if (z_0 == z_k)
-                rotacoes_cubo[j][i][z_k] = face[i][j];
+                peca_cubo[j][i][z_k] = face[i][j];
         }
-
 }
 
 // reset face selection parameters
@@ -90,7 +88,7 @@ void set_camera()
 void fazer_cubo(int x, int y, int z)
 {
 
-    vector<rotacionar_cubo> lrot = rotacoes_cubo[x][y][z];
+    vector<rotacionar_cubo> lrot = peca_cubo[x][y][z];
 
     //armazena as transformacoes na pilha interna do opengl 
     glPushMatrix();
@@ -114,7 +112,7 @@ void fazer_cubo(int x, int y, int z)
         glVertex3f(tamanho_cubo / 2, -tamanho_cubo / 2, tamanho_cubo / 2);
     glEnd();
     
-    glColor3f(0.0f, 1.0f, 0.0f); // verde
+    glColor3f(0.87f, 0.4f, 0.07f); // laranja
     glBegin(GL_QUADS);  // tras
     glNormal3f(0.0, 0.0, -1.0);  // face normal
         glVertex3f(tamanho_cubo / 2, tamanho_cubo / 2, -tamanho_cubo / 2);
@@ -141,7 +139,7 @@ void fazer_cubo(int x, int y, int z)
         glVertex3f(tamanho_cubo / 2, tamanho_cubo / 2, -tamanho_cubo / 2);
     glEnd();
     
-    glColor3f(1.0f, 0.3f, 0.5f); // rosa
+    glColor3f(1, 0.964, 0); // amarelo
     glBegin(GL_QUADS);  // topo
     glNormal3f(0.0, 1.0, 0.0);  // face normal
         glVertex3f(-tamanho_cubo / 2, tamanho_cubo / 2, -tamanho_cubo / 2);
@@ -150,7 +148,7 @@ void fazer_cubo(int x, int y, int z)
         glVertex3f(tamanho_cubo / 2, tamanho_cubo / 2, -tamanho_cubo / 2);
     glEnd();
     
-    glColor3f(0.5f, 0.4f, 0.7f); // roxo
+    glColor3f(0.0f, 1.0f, 0.0f); // verde
     glBegin(GL_QUADS);  // base
     glNormal3f(0.0, -1.0, 0.0);  // face normal
         glVertex3f(-tamanho_cubo / 2, -tamanho_cubo / 2, -tamanho_cubo / 2);
@@ -205,7 +203,7 @@ void func_iniciar(void)
 
     GLfloat ambient_lighte[4] = { 0.19,0.0123,0,1.0 };
     GLfloat diffuse_light[4] = { 0.5,0.7,0.7,1.0 };		// cor
-    GLfloat specular_light[4] = { 1.0, 1.0, 1.0, 1.0 };	// brilho
+    GLfloat specular_light[4] = { 0.952, 0.631, 0.247, 1.0 };	// brilho
     GLfloat light_position[4] = { 1.0, 50.0, 50.0, 1.0 };
 
     // brilho do material
@@ -275,23 +273,23 @@ void keyboard_func(unsigned char key, int x, int y)
 {
 
     switch (key) {
-    case 'D': // direita
-    case 'd':
+    case 'A': // esquerda
+    case 'a':
         girar_x = (girar_x - crement) % 360;
         break;
 
-    case 'A': // esquerda
-    case 'a':
+    case 'D': // direita
+    case 'd':
         girar_x = (girar_x + crement) % 360;
         break;
 
-    case 'W': // baixo
-    case 'w':
+    case 'S': // baixo
+    case 's':
         girar_y = (girar_y + crement) % 360;
         break;
 
-    case 'S': // cima
-    case 's':
+    case 'W': // cima
+    case 'w':
         girar_y = (girar_y - crement) % 360;
         break;
     
@@ -301,16 +299,9 @@ void keyboard_func(unsigned char key, int x, int y)
         // seleciona a face do cubo
         // faces - eixo x
     case '1':
-        cout << x_0;
-        cout << x_k;
-        cout << "\n";
         reset_selected_face();
         x_0 = 0;
         x_k = 0;
-        cout << "\n";
-        cout << "\n";
-        cout << x_0;
-        cout << x_k;
         break;
 
     case '2':
@@ -377,21 +368,21 @@ void keyboard_func(unsigned char key, int x, int y)
         // end of cube movements
     
         //embaralhar o cubo
-    case 'P':
-    case 'p':
+    //case 'P':
+    //case 'p':
         //definindo o aleatorio
       
-        num_aleatorio = (rand() % 9) + 1;
-        str_aleatorio = direcoes[rand() % 2];
+        //num_aleatorio = (rand() % 9) + 1;
+        //str_aleatorio = direcoes[rand() % 2];
         //num_aleatorio = (rand() % 9)+1;
         //cout << direcoes[rand() % 2];
-        cout << num_aleatorio;
-        cout << "\n";
+        //cout << num_aleatorio;
+        //cout << "\n";
         // seta a parte que vai rotacionar
-        keyboard_func(static_cast<char>(num_aleatorio), 0, 0);
+        //keyboard_func(static_cast<char>(num_aleatorio), 0, 0);
         //rotaciona chamando a direcao
         //keyboard_func(str_aleatorio, 0, 0);
-        break;
+       // break;
     default:
         break;
 
