@@ -1,53 +1,54 @@
-// Rubik Cube in OpenGL
-
 #include <C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\VS\gl\glut.h>
 #include <vector>
 #include <iostream>
+#include <cstdlib> //para o numero aleatorio
 
 using namespace std;
 
-struct cube_rotate {
+struct rotacionar_cubo {
 
-    GLfloat angle, x, y, z;
+    GLfloat angulo, x, y, z;
 
 };
 
-GLfloat angle, fAspect, cube_size;
-GLint rot_x, rot_y, crement, x_0, x_k, y_0, y_k, z_0, z_k , gap;//, gap_crement;
-//cube_rotate cube_rotations[3][3][3];
-vector<cube_rotate> cube_rotations[3][3][3];
+GLfloat angulo, fAspect, tamanho_cubo;
+GLint girar_y, girar_x, crement, x_0, x_k, y_0, y_k, z_0, z_k , espacamento;
+vector<rotacionar_cubo> rotacoes_cubo[3][3][3];
+
+const char direcoes[2] = { 'q', 'e'};
+char str_aleatorio;
+int num_aleatorio;
 
 void load_visualization_parameters(void);
 
-void apply_rotation(GLfloat angle) {
+void aplicar_rotacao(GLfloat angulo) {
 
-    vector<cube_rotate> face[3][3];
+    vector<rotacionar_cubo> face[3][3];
     int index;
-    cube_rotate rotation;
+    rotacionar_cubo rotacao;
 
     // copy face to be rotated
-    // apply rotation to face
+    // apply rotacao to face
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j) {
-
             index = 2 - j % 3;
 
             if (x_0 == x_k) {
-                rotation = { angle, 1.0, 0.0, 0.0 };
-                face[index][i] = cube_rotations[x_k][i][j];
+                rotacao = { angulo, 1.0, 0.0, 0.0 };
+                face[index][i] = rotacoes_cubo[x_k][i][j];
             }
 
             if (y_0 == y_k) {
-                rotation = { angle, 0.0, 1.0, 0.0 };
-                face[index][i] = cube_rotations[j][y_k][i];
+                rotacao = { angulo, 0.0, 1.0, 0.0 };
+                face[index][i] = rotacoes_cubo[j][y_k][i];
             }
 
             if (z_0 == z_k) {
-                rotation = { -1 * angle, 0.0, 0.0, 1.0 };
-                face[index][i] = cube_rotations[j][i][z_k];
+                rotacao = { -1 * angulo, 0.0, 0.0, 1.0 };
+                face[index][i] = rotacoes_cubo[j][i][z_k];
             }
 
-            face[index][i].push_back(rotation);
+            face[index][i].push_back(rotacao);
 
         }
 
@@ -56,13 +57,13 @@ void apply_rotation(GLfloat angle) {
         for (int j = 0; j < 3; ++j) {
 
             if (x_0 == x_k)
-                cube_rotations[x_k][i][j] = face[i][j];
+                rotacoes_cubo[x_k][i][j] = face[i][j];
 
             if (y_0 == y_k)
-                cube_rotations[j][y_k][i] = face[i][j];
+                rotacoes_cubo[j][y_k][i] = face[i][j];
 
             if (z_0 == z_k)
-                cube_rotations[j][i][z_k] = face[i][j];
+                rotacoes_cubo[j][i][z_k] = face[i][j];
         }
 
 }
@@ -86,22 +87,20 @@ void set_camera()
 
 }
 
-// draw a cube
-void draw_cube(int x, int y, int z)
+void fazer_cubo(int x, int y, int z)
 {
 
-    vector<cube_rotate> lrot = cube_rotations[x][y][z];
+    vector<rotacionar_cubo> lrot = rotacoes_cubo[x][y][z];
 
     //armazena as transformacoes na pilha interna do opengl 
     glPushMatrix();
 
-    // translate to final position
-    glTranslatef((x - 1) * cube_size + x * gap, (y - 1) * cube_size + y * gap, (z - 1) * cube_size + z * gap);
-    //cout << cube_size;
-    // rotate cube to correct position
+    // multiplica a matriz atual por uma matriz de translacao
+    glTranslatef((x - 1) * tamanho_cubo + x * espacamento, (y - 1) * tamanho_cubo + y * espacamento, (z - 1) * tamanho_cubo + z * espacamento);
+    
+    // rotaciona o cubo 
     for (int i = lrot.size() - 1; i >= 0; --i)
-        glRotatef(lrot[i].angle, lrot[i].x, lrot[i].y, lrot[i].z);
-    //cout << "Hello World!\n";
+        glRotatef(lrot[i].angulo, lrot[i].x, lrot[i].y, lrot[i].z);
     
     // definindo as cores e as posicoes dos quadrilateros
 
@@ -109,144 +108,161 @@ void draw_cube(int x, int y, int z)
     glBegin(GL_QUADS);  // define que vai ser um quadrilatero
     glNormal3f(0.0, 0.0, 1.0);  // frente
     // vertices do quadrilatero
-        glVertex3f(cube_size / 2, cube_size / 2, cube_size / 2);
-        glVertex3f(-cube_size / 2, cube_size / 2, cube_size / 2);
-        glVertex3f(-cube_size / 2, -cube_size / 2, cube_size / 2);
-        glVertex3f(cube_size / 2, -cube_size / 2, cube_size / 2);
+        glVertex3f(tamanho_cubo / 2, tamanho_cubo / 2, tamanho_cubo / 2);
+        glVertex3f(-tamanho_cubo / 2, tamanho_cubo / 2, tamanho_cubo / 2);
+        glVertex3f(-tamanho_cubo / 2, -tamanho_cubo / 2, tamanho_cubo / 2);
+        glVertex3f(tamanho_cubo / 2, -tamanho_cubo / 2, tamanho_cubo / 2);
     glEnd();
     
     glColor3f(0.0f, 1.0f, 0.0f); // verde
-    //glColor3f(0.2f, 0.7f, 1);
     glBegin(GL_QUADS);  // tras
     glNormal3f(0.0, 0.0, -1.0);  // face normal
-        glVertex3f(cube_size / 2, cube_size / 2, -cube_size / 2);
-        glVertex3f(cube_size / 2, -cube_size / 2, -cube_size / 2);
-        glVertex3f(-cube_size / 2, -cube_size / 2, -cube_size / 2);
-        glVertex3f(-cube_size / 2, cube_size / 2, -cube_size / 2);
+        glVertex3f(tamanho_cubo / 2, tamanho_cubo / 2, -tamanho_cubo / 2);
+        glVertex3f(tamanho_cubo / 2, -tamanho_cubo / 2, -tamanho_cubo / 2);
+        glVertex3f(-tamanho_cubo / 2, -tamanho_cubo / 2, -tamanho_cubo / 2);
+        glVertex3f(-tamanho_cubo / 2, tamanho_cubo / 2, -tamanho_cubo / 2);
     glEnd();
     
     glColor3f(0.0f, 0.0f, 1.0f); // azul
     glBegin(GL_QUADS);  // esquerda
     glNormal3f(-1.0, 0.0, 0.0);  // face normal
-        glVertex3f(-cube_size / 2, cube_size / 2, cube_size / 2);
-        glVertex3f(-cube_size / 2, cube_size / 2, -cube_size / 2);
-        glVertex3f(-cube_size / 2, -cube_size / 2, -cube_size / 2);
-        glVertex3f(-cube_size / 2, -cube_size / 2, cube_size / 2);
+        glVertex3f(-tamanho_cubo / 2, tamanho_cubo / 2, tamanho_cubo / 2);
+        glVertex3f(-tamanho_cubo / 2, tamanho_cubo / 2, -tamanho_cubo / 2);
+        glVertex3f(-tamanho_cubo / 2, -tamanho_cubo / 2, -tamanho_cubo / 2);
+        glVertex3f(-tamanho_cubo / 2, -tamanho_cubo / 2, tamanho_cubo / 2);
     glEnd();
     
     glColor3f(1.0f, 1.0f, 1.0f); // branco
     glBegin(GL_QUADS);  // direita
     glNormal3f(1.0, 0.0, 0.0);  // face normal
-        glVertex3f(cube_size / 2, cube_size / 2, cube_size / 2);
-        glVertex3f(cube_size / 2, -cube_size / 2, cube_size / 2);
-        glVertex3f(cube_size / 2, -cube_size / 2, -cube_size / 2);
-        glVertex3f(cube_size / 2, cube_size / 2, -cube_size / 2);
+        glVertex3f(tamanho_cubo / 2, tamanho_cubo / 2, tamanho_cubo / 2);
+        glVertex3f(tamanho_cubo / 2, -tamanho_cubo / 2, tamanho_cubo / 2);
+        glVertex3f(tamanho_cubo / 2, -tamanho_cubo / 2, -tamanho_cubo / 2);
+        glVertex3f(tamanho_cubo / 2, tamanho_cubo / 2, -tamanho_cubo / 2);
     glEnd();
     
     glColor3f(1.0f, 0.3f, 0.5f); // rosa
     glBegin(GL_QUADS);  // topo
     glNormal3f(0.0, 1.0, 0.0);  // face normal
-        glVertex3f(-cube_size / 2, cube_size / 2, -cube_size / 2);
-        glVertex3f(-cube_size / 2, cube_size / 2, cube_size / 2);
-        glVertex3f(cube_size / 2, cube_size / 2, cube_size / 2);
-        glVertex3f(cube_size / 2, cube_size / 2, -cube_size / 2);
+        glVertex3f(-tamanho_cubo / 2, tamanho_cubo / 2, -tamanho_cubo / 2);
+        glVertex3f(-tamanho_cubo / 2, tamanho_cubo / 2, tamanho_cubo / 2);
+        glVertex3f(tamanho_cubo / 2, tamanho_cubo / 2, tamanho_cubo / 2);
+        glVertex3f(tamanho_cubo / 2, tamanho_cubo / 2, -tamanho_cubo / 2);
     glEnd();
     
     glColor3f(0.5f, 0.4f, 0.7f); // roxo
     glBegin(GL_QUADS);  // base
     glNormal3f(0.0, -1.0, 0.0);  // face normal
-        glVertex3f(-cube_size / 2, -cube_size / 2, -cube_size / 2);
-        glVertex3f(cube_size / 2, -cube_size / 2, -cube_size / 2);
-        glVertex3f(cube_size / 2, -cube_size / 2, cube_size / 2);
-        glVertex3f(-cube_size / 2, -cube_size / 2, cube_size / 2);
+        glVertex3f(-tamanho_cubo / 2, -tamanho_cubo / 2, -tamanho_cubo / 2);
+        glVertex3f(tamanho_cubo / 2, -tamanho_cubo / 2, -tamanho_cubo / 2);
+        glVertex3f(tamanho_cubo / 2, -tamanho_cubo / 2, tamanho_cubo / 2);
+        glVertex3f(-tamanho_cubo / 2, -tamanho_cubo / 2, tamanho_cubo / 2);
     glEnd();
-    /**/
     // restaura as transformacoes anteriores da pilha interna do opengl
     glPopMatrix();
 
-} // draw cube function
+}
 
-// construir cena
-void draw_func(void)
+void construir_cena(void)
 {
 
-    int x = cube_size, y = cube_size, z = cube_size;
+    int x = tamanho_cubo, y = tamanho_cubo, z = tamanho_cubo;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // reset transformations
+    // reseta as transformacoes
     glLoadIdentity();
 
-    // set camera position
+    // seta a posicao da camera
     set_camera();
 
-    // apply visualization transformations
-    glRotatef(rot_x, 1.0, 0.0, 0.0); // rotate in y axis
-    glRotatef(rot_y, 0.0, 1.0, 0.0); // rotate in x axis
-    //draw_cube(1, 1, 1);
+    // aplica a transformacao da visualizacao
+    glRotatef(girar_y, 1.0, 0.0, 0.0);
+    glRotatef(girar_x, 0.0, 1.0, 0.0);
     
-    for (int i = 0; i < 3; ++i) // step through x axis
-        for (int j = 0; j < 3; ++j) // step through y axis
-            for (int k = 0; k < 3; ++k) { // step through z axis
+    for (int i = 0; i < 3; ++i) // eixo x
+        for (int j = 0; j < 3; ++j) // eixo y
+            for (int k = 0; k < 3; ++k) {// eixo z
 
-          // draw a single cube
-                draw_cube(i, j, k);
+          // desenha um cubinho
+                fazer_cubo(i, j, k);
 
             }
      
-    //cout << "--------------------\n";
-    // flush opengl commands
     glutSwapBuffers();
 
 }
 
-// init rendering parameters
-void init_func(void)
+// renderizando os parametros
+void func_iniciar(void)
 {
 
-    // init parameters
-    cube_size = 20.0; // cuboid size
-    rot_x = 0.0; // view rotation x
-    rot_y = 0.0; // view rotation y
-    crement = 5; // rotation (in/de)crement
-    gap = 2;
+    tamanho_cubo = 20.0;
+    girar_y = 0.0;
+    girar_x = 0.0;
+    crement = 5; // rotacao (incremento e decremento)
+    espacamento = 2;
+
+    GLfloat ambient_lighte[4] = { 0.19,0.0123,0,1.0 };
+    GLfloat diffuse_light[4] = { 0.5,0.7,0.7,1.0 };		// cor
+    GLfloat specular_light[4] = { 1.0, 1.0, 1.0, 1.0 };	// brilho
+    GLfloat light_position[4] = { 1.0, 50.0, 50.0, 1.0 };
+
+    // brilho do material
+    GLfloat specularity[4] = { 0.03,0.0123,0.8,1.0 };
+    GLint material_specularity = 60;
 
     // cor de fundo
-    glClearColor(1.0f, 0.8f, 0.2f, 1.0f);
-    
+    glClearColor(0.35f, 0.75f, 0.8f, 1.0f);
+    glShadeModel(GL_SMOOTH);
+
+    // flexibilidade do 
+    glMaterialfv(GL_FRONT, GL_SPECULAR, specularity);
+    // concentracao do brilho
+    glMateriali(GL_FRONT, GL_SHININESS, material_specularity);
+
+    // ativar bilho do ambiente
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient_lighte);
+
+    // definindo parametros de luz
+    glLightfv(GL_LIGHT0, GL_AMBIENT, ambient_lighte);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse_light);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, specular_light);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+    // mudar cor do material
+    glEnable(GL_COLOR_MATERIAL);
+    // luz
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    // buffer de profundidade
     glEnable(GL_DEPTH_TEST);
 
     // tamanho do cubo (ver direitinho)
-    angle = 55;
+    angulo = 55;
 
-} // init
+}
 
-// specify what's shown in the window
+// carregar janela
 void load_visualization_parameters(void)
 {
-    // specify projection coordinate system
+    //  sistema de coordenadas 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    // specify projection perspective
-    gluPerspective(angle, fAspect, 0.4, 500);
+    //projecao da perspectiva
+    gluPerspective(angulo, fAspect, 0.4, 500);
 
-    // init model coordinate system
+    // inicial sistema de coordenadad
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // specify observer and target positions
     set_camera();
-} // load visualization parameters
+}
 
 // window reshape callback
-void reshape_func(GLsizei w, GLsizei h)
+void remodelar(GLsizei w, GLsizei h)
 {
-    // prevents division by zero
-    //if (h == 0) h = 1;
-
-    // viewport size
-    glViewport(0, 0, w, h);
 
     // aspect ratio
     fAspect = (GLfloat)w / (GLfloat)h;
@@ -261,33 +277,40 @@ void keyboard_func(unsigned char key, int x, int y)
     switch (key) {
     case 'D': // direita
     case 'd':
-        rot_y = (rot_y - crement) % 360;
+        girar_x = (girar_x - crement) % 360;
         break;
 
     case 'A': // esquerda
     case 'a':
-        rot_y = (rot_y + crement) % 360;
+        girar_x = (girar_x + crement) % 360;
         break;
 
     case 'W': // baixo
     case 'w':
-        rot_x = (rot_x + crement) % 360;
+        girar_y = (girar_y + crement) % 360;
         break;
 
     case 'S': // cima
     case 's':
-        rot_x = (rot_x - crement) % 360;
+        girar_y = (girar_y - crement) % 360;
         break;
     
 
         // movimentar o cubo
 
-        // select cube face
-        // x-axis faces
+        // seleciona a face do cubo
+        // faces - eixo x
     case '1':
+        cout << x_0;
+        cout << x_k;
+        cout << "\n";
         reset_selected_face();
         x_0 = 0;
         x_k = 0;
+        cout << "\n";
+        cout << "\n";
+        cout << x_0;
+        cout << x_k;
         break;
 
     case '2':
@@ -302,7 +325,7 @@ void keyboard_func(unsigned char key, int x, int y)
         x_k = 2;
         break;
 
-        // y-axis faces
+        // faces - eixo y
     case '4':
         reset_selected_face();
         y_0 = 0;
@@ -321,7 +344,7 @@ void keyboard_func(unsigned char key, int x, int y)
         y_k = 2;
         break;
 
-        // z-axis faces
+        // faces - eixo z
     case '7':
         reset_selected_face();
         z_0 = 0;
@@ -343,16 +366,32 @@ void keyboard_func(unsigned char key, int x, int y)
         // move selected face
     case 'Q': // sentido antihorario
     case 'q':
-        apply_rotation(-90);
+        aplicar_rotacao(-90);
         break;
 
     case 'E': // sentido horario
     case 'e':
-        apply_rotation(90);
+        aplicar_rotacao(90);
         break;
 
         // end of cube movements
-
+    
+        //embaralhar o cubo
+    case 'P':
+    case 'p':
+        //definindo o aleatorio
+      
+        num_aleatorio = (rand() % 9) + 1;
+        str_aleatorio = direcoes[rand() % 2];
+        //num_aleatorio = (rand() % 9)+1;
+        //cout << direcoes[rand() % 2];
+        cout << num_aleatorio;
+        cout << "\n";
+        // seta a parte que vai rotacionar
+        keyboard_func(static_cast<char>(num_aleatorio), 0, 0);
+        //rotaciona chamando a direcao
+        //keyboard_func(str_aleatorio, 0, 0);
+        break;
     default:
         break;
 
@@ -362,33 +401,17 @@ void keyboard_func(unsigned char key, int x, int y)
 
 }
 
-// mouse function callback
-void mouse_func(int button, int state, int x, int y)
-{/*
-    if (button == GLUT_LEFT_BUTTON)
-        if (state == GLUT_DOWN) {  // Zoom-in
-            if (angle >= 10) angle -= 5;
-        }
-    if (button == GLUT_RIGHT_BUTTON)
-        if (state == GLUT_DOWN) {  // Zoom-out
-            if (angle <= 130) angle += 5;
-        }
-    load_visualization_parameters();
-    glutPostRedisplay();*/
-} // mouse function
-
-
 int main(int argc, char** argv)
 {
+    srand((unsigned)time(0)); //inicializa a aleatoriedade da geracao
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(900, 600);
     glutInitWindowPosition(350, 100);
     glutCreateWindow("Cubo Mágico"); // titulo da pagina
-    glutDisplayFunc(draw_func); 
-    glutReshapeFunc(reshape_func);
-    glutMouseFunc(mouse_func);
+    glutDisplayFunc(construir_cena); 
+    glutReshapeFunc(remodelar);
     glutKeyboardFunc(keyboard_func);
-    init_func();
+    func_iniciar();
     glutMainLoop();
 } // main
